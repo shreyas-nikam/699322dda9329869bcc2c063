@@ -50,6 +50,7 @@ tier_colors_map = {
 
 # --- 2. Core Data Processing Functions ---
 
+
 def initialize_scorecard_data(raw_data: Dict[str, List[int]]) -> pd.DataFrame:
     """
     Initializes the DataFrame for automation project scores from raw data.
@@ -67,6 +68,7 @@ def initialize_scorecard_data(raw_data: Dict[str, List[int]]) -> pd.DataFrame:
     scores_df.columns.name = 'Dimension'
     return scores_df
 
+
 def add_new_task(df: pd.DataFrame, task_id: str, scores: Dict[str, int]) -> pd.DataFrame:
     """
     Adds a new automation task to the scorecard DataFrame. This function assumes
@@ -83,20 +85,25 @@ def add_new_task(df: pd.DataFrame, task_id: str, scores: Dict[str, int]) -> pd.D
                       Returns the original DataFrame if task_id already exists.
     """
     if task_id in df.index:
-        print(f"Warning: Project ID '{task_id}' already exists. Skipping addition.")
+        print(
+            f"Warning: Project ID '{task_id}' already exists. Skipping addition.")
         return df
 
     # Ensure scores dictionary contains all SCORE_COLUMNS for consistency
     validated_scores = {dim: scores.get(dim, 0) for dim in SCORE_COLUMNS}
-    new_task = pd.DataFrame([validated_scores], index=[task_id], columns=SCORE_COLUMNS)
+    new_task = pd.DataFrame([validated_scores], index=[
+                            task_id], columns=SCORE_COLUMNS)
     return pd.concat([df, new_task])
+
 
 def _calculate_weighted_score(row: pd.Series, weights: Dict[str, float]) -> float:
     """
     Helper function to calculate the weighted suitability score for a single project row.
     """
-    score = sum(row[dim] * weight for dim, weight in weights.items() if dim in row.index)
+    score = sum(row[dim] * weight for dim,
+                weight in weights.items() if dim in row.index)
     return score
+
 
 def calculate_suitability_scores(
     df: pd.DataFrame,
@@ -114,10 +121,13 @@ def calculate_suitability_scores(
     Returns:
         pd.DataFrame: The DataFrame with 'suit_efficiency' and 'suit_risk' columns added.
     """
-    df_copy = df.copy() # Operate on a copy to avoid modifying the original DataFrame
-    df_copy['suit_efficiency'] = df_copy.apply(lambda row: _calculate_weighted_score(row, weights_efficiency), axis=1)
-    df_copy['suit_risk'] = df_copy.apply(lambda row: _calculate_weighted_score(row, weights_risk), axis=1)
+    df_copy = df.copy()  # Operate on a copy to avoid modifying the original DataFrame
+    df_copy['suit_efficiency'] = df_copy.apply(
+        lambda row: _calculate_weighted_score(row, weights_efficiency), axis=1)
+    df_copy['suit_risk'] = df_copy.apply(
+        lambda row: _calculate_weighted_score(row, weights_risk), axis=1)
     return df_copy
+
 
 def _classify_tier_logic(row: pd.Series) -> str:
     """
@@ -135,6 +145,7 @@ def _classify_tier_logic(row: pd.Series) -> str:
     # Rule 4: Hybrid (Default for remaining cases)
     else:
         return 'Hybrid (Traditional + GenAI)'
+
 
 def classify_automation_tier(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -155,6 +166,7 @@ def classify_automation_tier(df: pd.DataFrame) -> pd.DataFrame:
 # Each visualization function generates a matplotlib Figure object, suitable for embedding
 # into web applications (e.g., by converting to a BytesIO object).
 
+
 def generate_heatmap(df: pd.DataFrame, dimensions_keys: List[str] = SCORE_COLUMNS) -> plt.Figure:
     """
     Generates a heatmap of automation task scores across dimensions.
@@ -167,12 +179,15 @@ def generate_heatmap(df: pd.DataFrame, dimensions_keys: List[str] = SCORE_COLUMN
         plt.Figure: A matplotlib Figure object containing the heatmap.
     """
     fig, ax = plt.subplots(figsize=(14, 8))
-    sns.heatmap(df[dimensions_keys], annot=True, fmt='.0f', cmap='viridis', linewidths=.5, linecolor='lightgray', ax=ax)
-    ax.set_title('Automation Scorecard Heatmap: Task Scores Across Dimensions', fontsize=16)
+    sns.heatmap(df[dimensions_keys], annot=True, fmt='.0f',
+                cmap='viridis', linewidths=.5, linecolor='lightgray', ax=ax)
+    ax.set_title(
+        'Automation Scorecard Heatmap: Task Scores Across Dimensions', fontsize=16)
     ax.set_xlabel('Score Dimensions', fontsize=12)
     ax.set_ylabel('Candidate Projects', fontsize=12)
     plt.tight_layout()
     return fig
+
 
 def generate_impact_risk_quadrant_plot(df: pd.DataFrame) -> plt.Figure:
     """
@@ -198,14 +213,19 @@ def generate_impact_risk_quadrant_plot(df: pd.DataFrame) -> plt.Figure:
     ax.axhline(y=2.5, color='gray', linestyle='--', alpha=0.6)
     ax.axvline(x=3.0, color='gray', linestyle='--', alpha=0.6)
 
-    ax.text(4.5, 1.2, 'Quick Wins', fontsize=12, color='green', fontweight='bold', ha='center', va='center')
-    ax.text(1.5, 1.2, 'Low Impact / Low Risk', fontsize=12, color='gray', fontweight='bold', ha='center', va='center')
-    ax.text(1.5, 4.0, 'CAUTION (High Risk)', fontsize=12, color='red', fontweight='bold', ha='center', va='center')
-    ax.text(4.5, 4.0, 'Strategic / High Risk', fontsize=12, color='purple', fontweight='bold', ha='center', va='center')
+    ax.text(4.5, 1.2, 'Quick Wins', fontsize=12, color='green',
+            fontweight='bold', ha='center', va='center')
+    ax.text(1.5, 1.2, 'Low Impact / Low Risk', fontsize=12,
+            color='gray', fontweight='bold', ha='center', va='center')
+    ax.text(1.5, 4.0, 'CAUTION (High Risk)', fontsize=12,
+            color='red', fontweight='bold', ha='center', va='center')
+    ax.text(4.5, 4.0, 'Strategic / High Risk', fontsize=12,
+            color='purple', fontweight='bold', ha='center', va='center')
 
     ax.set_xlabel('Efficiency Impact (1-5)', fontsize=12)
     ax.set_ylabel('Risk Level (1-5)', fontsize=12)
-    ax.set_title('Automation Priority: Impact vs. Risk Quadrant Plot', fontsize=16)
+    ax.set_title(
+        'Automation Priority: Impact vs. Risk Quadrant Plot', fontsize=16)
     ax.set_xticks(np.arange(1, 6, 1))
     ax.set_yticks(np.arange(1, 6, 1))
     ax.grid(True, linestyle=':', alpha=0.7)
@@ -214,10 +234,12 @@ def generate_impact_risk_quadrant_plot(df: pd.DataFrame) -> plt.Figure:
     handles, labels = ax.get_legend_handles_labels()
     unique_labels = list(dict.fromkeys(labels))
     unique_handles = [handles[labels.index(ul)] for ul in unique_labels]
-    ax.legend(unique_handles, unique_labels, title="Automation Tier", bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax.legend(unique_handles, unique_labels, title="Automation Tier",
+              bbox_to_anchor=(1.05, 1), loc='upper left')
 
     plt.tight_layout(rect=[0, 0, 0.85, 1])
     return fig
+
 
 def generate_suitability_ranking_bar_chart(df: pd.DataFrame) -> plt.Figure:
     """
@@ -238,10 +260,13 @@ def generate_suitability_ranking_bar_chart(df: pd.DataFrame) -> plt.Figure:
 
     ax.set_xlabel('Weighted Suitability Score (Efficiency-First)', fontsize=12)
     ax.set_ylabel('Candidate Projects', fontsize=12)
-    ax.set_title('Suitability Ranking: Projects by Efficiency-First Score', fontsize=16)
-    ax.legend(title="Automation Tier", bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax.set_title(
+        'Suitability Ranking: Projects by Efficiency-First Score', fontsize=16)
+    ax.legend(title="Automation Tier",
+              bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout(rect=[0, 0, 0.85, 1])
     return fig
+
 
 def generate_radar_charts(df: pd.DataFrame, selected_tasks: List[str], dimensions_keys: List[str] = SCORE_COLUMNS) -> plt.Figure:
     """
@@ -256,41 +281,47 @@ def generate_radar_charts(df: pd.DataFrame, selected_tasks: List[str], dimension
         plt.Figure: A matplotlib Figure object containing the radar charts.
                     Returns None if no valid tasks are selected.
     """
-    valid_selected_tasks = [task for task in selected_tasks if task in df.index]
+    valid_selected_tasks = [
+        task for task in selected_tasks if task in df.index]
     if not valid_selected_tasks:
         return None
 
     num_vars = len(dimensions_keys)
     angles = [n / float(num_vars) * 2 * pi for n in range(num_vars)]
-    angles += angles[:1] # Complete the circle for plotting
+    angles += angles[:1]  # Complete the circle for plotting
 
-    fig, axes = plt.subplots(1, len(valid_selected_tasks), figsize=(5 * len(valid_selected_tasks), 6), subplot_kw=dict(polar=True))
-    if len(valid_selected_tasks) == 1: # Handle single subplot case
+    fig, axes = plt.subplots(1, len(valid_selected_tasks), figsize=(
+        5 * len(valid_selected_tasks), 6), subplot_kw=dict(polar=True))
+    if len(valid_selected_tasks) == 1:  # Handle single subplot case
         axes = [axes]
 
-    max_score = 5 # Assuming 1-5 scale for all dimensions for radar chart visualization
+    max_score = 5  # Assuming 1-5 scale for all dimensions for radar chart visualization
 
     for i, task_id in enumerate(valid_selected_tasks):
         values = df.loc[task_id, dimensions_keys].tolist()
-        values += values[:1] # Complete the circle for plotting
+        values += values[:1]  # Complete the circle for plotting
 
         ax = axes[i]
         ax.set_theta_offset(pi / 2)
         ax.set_theta_direction(-1)
-        ax.set_yticklabels([]) # Hide radial labels
+        ax.set_yticklabels([])  # Hide radial labels
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(dimensions_keys, fontsize=9, rotation=45, ha='right')
-        ax.set_rlim(0, max_score) # Set radial limits
-        ax.set_rlabel_position(0) # Hide default radial axis labels
+        ax.set_xticklabels(dimensions_keys, fontsize=9,
+                           rotation=45, ha='right')
+        ax.set_rlim(0, max_score)  # Set radial limits
+        ax.set_rlabel_position(0)  # Hide default radial axis labels
 
-        ax.plot(angles, values, linewidth=2, linestyle='solid', label=task_id, color=df.loc[task_id, 'color'])
+        ax.plot(angles, values, linewidth=2, linestyle='solid',
+                label=task_id, color=df.loc[task_id, 'color'])
         ax.fill(angles, values, color=df.loc[task_id, 'color'], alpha=0.25)
-        ax.set_title(f"Profile: {task_id.split(':')[0]} ({df.loc[task_id, 'tier']})", va='bottom', fontsize=12)
+        ax.set_title(
+            f"Profile: {task_id.split(':')[0]} ({df.loc[task_id, 'tier']})", va='bottom', fontsize=12)
 
     plt.tight_layout()
     return fig
 
 # --- 4. Business Case & Roadmap Functions ---
+
 
 def generate_conceptual_hybrid_routing_table(task_id: str = 'T4: Performance Report') -> Tuple[pd.DataFrame, Dict[str, float]]:
     """
@@ -326,13 +357,15 @@ def generate_conceptual_hybrid_routing_table(task_id: str = 'T4: Performance Rep
             'Human Intervention Required'
         ],
         'Time (Manual, min)': [15, 30, 20, 45, 20, 15],
-        'Time (Auto, min)':   [0.17, 0.08, 0.17, 0.5, 0.25, 10] # Automated/human intervention time
+        # Automated/human intervention time
+        'Time (Auto, min)':   [0.17, 0.08, 0.17, 0.5, 0.25, 10]
     }
     hybrid_routing_df = pd.DataFrame(hybrid_routing_data)
 
     total_manual_time = hybrid_routing_df['Time (Manual, min)'].sum()
     total_hybrid_time = hybrid_routing_df['Time (Auto, min)'].sum()
-    time_reduction_percent = (1 - (total_hybrid_time / total_manual_time)) * 100 if total_manual_time > 0 else 0
+    time_reduction_percent = (
+        1 - (total_hybrid_time / total_manual_time)) * 100 if total_manual_time > 0 else 0
 
     metrics = {
         'total_manual_time': total_manual_time,
@@ -340,6 +373,7 @@ def generate_conceptual_hybrid_routing_table(task_id: str = 'T4: Performance Rep
         'time_reduction_percent': time_reduction_percent
     }
     return hybrid_routing_df, metrics
+
 
 def calculate_roi_for_project(
     df: pd.DataFrame,
@@ -387,6 +421,7 @@ def calculate_roi_for_project(
         'risk_mitigation': "Implement robust data validation checks, phased rollout, and human-in-the-loop review for exceptions."
     }
 
+
 def generate_roadmap(
     df: pd.DataFrame,
     initial_hours_saved_map: Dict[str, int],
@@ -407,8 +442,12 @@ def generate_roadmap(
     df_copy = df.copy()
 
     # Apply initial hours saved and effort, with defaults for new/custom tasks
-    df_copy['hours_saved_month'] = df_copy.index.map(lambda x: initial_hours_saved_map.get(x, 7)) # Default 7 for custom tasks
-    df_copy['effort'] = df_copy.index.map(lambda x: initial_effort_map.get(x, 'Med')) # Default 'Med' for custom tasks
+    df_copy['hours_saved_month'] = df_copy.index.map(
+        # Default 7 for custom tasks
+        lambda x: initial_hours_saved_map.get(x, 7))
+    df_copy['effort'] = df_copy.index.map(
+        # Default 'Med' for custom tasks
+        lambda x: initial_effort_map.get(x, 'Med'))
 
     def _categorize_timeline(row: pd.Series) -> str:
         """Helper to assign timeline categories based on effort."""
@@ -416,7 +455,7 @@ def generate_roadmap(
             return 'Quick Win (<1 week)'
         elif row['effort'] == 'Med':
             return 'Medium-Term (1-4 weeks)'
-        else: # 'High' effort
+        else:  # 'High' effort
             return 'Strategic (1-3 months)'
 
     df_copy['timeline'] = df_copy.apply(_categorize_timeline, axis=1)
@@ -426,6 +465,7 @@ def generate_roadmap(
     return final_roadmap[['timeline', 'hours_saved_month', 'tier']]
 
 # --- 5. Orchestrator Function ---
+
 
 def run_full_analysis(
     initial_raw_data: Dict[str, List[int]],
@@ -456,7 +496,8 @@ def run_full_analysis(
                         and summary metrics from the analysis.
     """
     if selected_radar_tasks is None:
-        selected_radar_tasks = ['T1: Data Ingestion', 'T2: 10-K Risk Extract', 'T8: Thesis Drafting']
+        selected_radar_tasks = ['T1: Data Ingestion',
+                                'T2: 10-K Risk Extract', 'T8: Thesis Drafting']
 
     results = {}
 
@@ -466,7 +507,8 @@ def run_full_analysis(
 
     # 2. Add custom tasks
     for task_info in custom_tasks_data:
-        scores_df = add_new_task(scores_df, task_info['task_id'], task_info['scores'])
+        scores_df = add_new_task(
+            scores_df, task_info['task_id'], task_info['scores'])
     results['scores_df_with_custom_tasks'] = scores_df.copy()
 
     # 3. Calculate suitability scores
@@ -486,20 +528,26 @@ def run_full_analysis(
     results['tier_distribution'] = scores_df['tier'].value_counts()
 
     # 5. Generate Visualizations (Figures will be returned as matplotlib Figure objects)
-    results['heatmap_fig'] = generate_heatmap(scores_df, dimensions_keys=SCORE_COLUMNS)
-    results['quadrant_plot_fig'] = generate_impact_risk_quadrant_plot(scores_df)
-    results['suitability_bar_chart_fig'] = generate_suitability_ranking_bar_chart(scores_df)
-    results['radar_charts_fig'] = generate_radar_charts(scores_df, selected_radar_tasks, dimensions_keys=SCORE_COLUMNS)
+    results['heatmap_fig'] = generate_heatmap(
+        scores_df, dimensions_keys=SCORE_COLUMNS)
+    results['quadrant_plot_fig'] = generate_impact_risk_quadrant_plot(
+        scores_df)
+    results['suitability_bar_chart_fig'] = generate_suitability_ranking_bar_chart(
+        scores_df)
+    results['radar_charts_fig'] = generate_radar_charts(
+        scores_df, selected_radar_tasks, dimensions_keys=SCORE_COLUMNS)
 
     # 6. Hybrid Routing Table for a conceptual task (e.g., T4)
-    hybrid_routing_df, hybrid_metrics = generate_conceptual_hybrid_routing_table('T4: Performance Report')
+    hybrid_routing_df, hybrid_metrics = generate_conceptual_hybrid_routing_table(
+        'T4: Performance Report')
     results['hybrid_routing_table_T4'] = hybrid_routing_df
     results['hybrid_routing_metrics_T4'] = hybrid_metrics
 
     # 7. ROI Estimation for the top-ranked project
     # Ensure there's at least one project to select
     if not scores_df.empty:
-        top_project_id = scores_df.sort_values('suit_efficiency', ascending=False).index[0]
+        top_project_id = scores_df.sort_values(
+            'suit_efficiency', ascending=False).index[0]
         roi_summary = calculate_roi_for_project(
             scores_df,
             top_project_id,
@@ -507,8 +555,8 @@ def run_full_analysis(
         )
         results['roi_summary'] = roi_summary
     else:
-        results['roi_summary'] = {"error": "No projects available for ROI calculation."}
-
+        results['roi_summary'] = {
+            "error": "No projects available for ROI calculation."}
 
     # 8. Prioritized Automation Roadmap
     prioritized_roadmap_df = generate_roadmap(
@@ -530,3 +578,134 @@ def run_full_analysis(
     )
 
     return results
+
+# --- 6. Additional Helper Functions and Data for Streamlit App ---
+
+
+def calculate_weighted_score(row: pd.Series, weights: Dict[str, float]) -> float:
+    """
+    Calculate weighted score for a single row. Used by the Streamlit app.
+
+    Args:
+        row: A pandas Series containing score values
+        weights: Dictionary of weights for each dimension
+
+    Returns:
+        float: The weighted score
+    """
+    return _calculate_weighted_score(row, weights)
+
+
+def classify_tier(row: pd.Series) -> str:
+    """
+    Classify a single row into an automation tier. Used by the Streamlit app.
+
+    Args:
+        row: A pandas Series containing score values
+
+    Returns:
+        str: The automation tier classification
+    """
+    return _classify_tier_logic(row)
+
+
+def categorize_timeline(row: pd.Series) -> str:
+    """
+    Categorize timeline based on effort level. Used by the Streamlit app.
+
+    Args:
+        row: A pandas Series containing an 'effort' field
+
+    Returns:
+        str: The timeline category
+    """
+    if row['effort'] == 'Low':
+        return 'Quick Win (<1 week)'
+    elif row['effort'] == 'Med':
+        return 'Medium-Term (1-4 weeks)'
+    else:  # 'High' effort
+        return 'Strategic (1-3 months)'
+
+
+# --- 7. Sample Data for Streamlit App ---
+
+# Initial dataset of 8 candidate tasks
+data = {
+    'T1: Data Ingestion': [2, 1, 3, 2, 0, 5],
+    'T2: 10-K Risk Extract': [3, 2, 4, 2, 0, 4],
+    'T3: Trade Recon': [1, 1, 1, 1, 0, 4],
+    'T4: Performance Report': [4, 3, 3, 3, 1, 5],
+    'T5: Email Drafting': [3, 3, 5, 2, 0, 3],
+    'T6: Compliance Check': [2, 2, 2, 5, 1, 3],
+    'T7: Market Summary': [3, 2, 5, 2, 0, 4],
+    'T8: Thesis Drafting': [5, 4, 5, 3, 1, 2]
+}
+
+# Custom task scores for Task 9 and Task 10
+custom_task_1_scores = {
+    'task_complexity': 2,
+    'output_objectivity': 2,
+    'data_structure': 2,
+    'risk_level': 1,
+    'human_oversight': 0,
+    'efficiency_impact': 4
+}
+
+custom_task_2_scores = {
+    'task_complexity': 4,
+    'output_objectivity': 4,
+    'data_structure': 4,
+    'risk_level': 4,
+    'human_oversight': 1,
+    'efficiency_impact': 3
+}
+
+# Hours saved per month mapping
+hours_saved_month_map = {
+    'T1: Data Ingestion': 12,
+    'T2: 10-K Risk Extract': 8,
+    'T3: Trade Recon': 15,
+    'T4: Performance Report': 10,
+    'T5: Email Drafting': 6,
+    'T6: Compliance Check': 20,
+    'T7: Market Summary': 5,
+    'T8: Thesis Drafting': 4,
+    'T9: Custom Task 1': 7,
+    'T10: Custom Task 2': 7
+}
+
+# Effort level mapping
+effort_map = {
+    'T1: Data Ingestion': 'Med',
+    'T2: 10-K Risk Extract': 'High',
+    'T3: Trade Recon': 'Low',
+    'T4: Performance Report': 'High',
+    'T5: Email Drafting': 'Low',
+    'T6: Compliance Check': 'High',
+    'T7: Market Summary': 'Med',
+    'T8: Thesis Drafting': 'High',
+    'T9: Custom Task 1': 'Med',
+    'T10: Custom Task 2': 'Med'
+}
+
+# Hybrid routing data for Task 4
+hybrid_routing_data = {
+    'Sub-Task': [
+        'Retrieve holdings/prices',
+        'Calculate returns/attribution',
+        'Generate charts from data',
+        'Draft market commentary',
+        'Customize for client (template)',
+        'Review and approve final report'
+    ],
+    'Tier': [
+        'Traditional Automation',
+        'Traditional Automation',
+        'GenAI / LLM Automation',
+        'GenAI / LLM Automation',
+        'GenAI / LLM Automation',
+        'Human Intervention Required'
+    ],
+    'Time (Manual, min)': [15, 30, 20, 45, 20, 15],
+    'Time (Auto, min)': [0.17, 0.08, 0.17, 0.5, 0.25, 10]
+}
